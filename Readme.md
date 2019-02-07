@@ -1,7 +1,8 @@
-#deletePictures
+deletePictures
+===
 
-##Bilder löschen die in der Tabelle oxarticles nicht mehr hinterlegt sind
-Löscht Bilder in den Unterverzeichnissen von "out/pictures/master/product/"
+*Löscht Bilder in den Unterverzeichnissen von "out/pictures/master/product/",  die in der Tabelle oxarticles nicht mehr
+hinterlegt sind*
 
 
 Installation:
@@ -41,10 +42,9 @@ Deinstallation:
 Remove Script from Shoproot or delete the script via itself (Button 'Löschen') 
 
 
-
 Version:
 ------------
-für/for: Oxid eShop 4.9 - 4.10
+Oxid eShop 4.9 - 4.10
 
-Script: 0.1 
+Version 0.1 
  
