@@ -1,5 +1,10 @@
 <?php
 
+use OxidEsales\Eshop\Core\DatabaseProvider;
+use OxidEsales\Eshop\Core\Exception\DatabaseConnectionException;
+use OxidEsales\Eshop\Core\Exception\DatabaseErrorException;
+use OxidEsales\Eshop\Core\Registry;
+
 include(__DIR__ . '/bootstrap.php');
 
 /**
@@ -42,6 +47,7 @@ class deletePictures extends oxSuperCfg
 
     /**
      * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function render()
     {
@@ -515,11 +521,11 @@ class deletePictures extends oxSuperCfg
 
     /**
      * @return array
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getLostPicturesSlotsFromTable()
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
 select d3folder from d3lostpictures
@@ -565,7 +571,7 @@ MYSQL;
      * @param $sSlot
      *
      * @return array
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getAllPicturesFromTable($sSlot)
     {
@@ -575,7 +581,7 @@ MYSQL;
             $sPictureDbField = 'ox'.$sSlot;
         }
 
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
 select {$sPictureDbField} from oxarticles where {$sPictureDbField} != ''
@@ -713,10 +719,11 @@ MYSQL;
      *
      * @return mixed
      * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getLostPictures($sSlot)
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb(oxDb::FETCH_MODE_ASSOC);
 
         /*
         $sPictureDbField = 'oxpic'.$sSlot;
@@ -751,11 +758,11 @@ MYSQL;
      * @param $sSlot
      *
      * @return false|string
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException
      */
     public function getCountLostPictures($sSlot)
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
 select count(oxid) as files from d3lostpictures
@@ -769,6 +776,7 @@ MYSQL;
     /**
      * @return array
      * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getLostPictureGroupByFolder()
     {
@@ -777,7 +785,7 @@ MYSQL;
             return array();
         }
 
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
 select d3folder, count(oxid) as files, sum(d3filesize) as size from d3lostpictures
@@ -800,7 +808,7 @@ MYSQL;
      * @param $sSlot
      *
      * @return false|string
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException
      */
     public function getCountLostPictureGroupByFolder($sSlot)
     {
@@ -809,7 +817,7 @@ MYSQL;
             $sPictureDbField = 'ox'.$sSlot;
         }
 
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
 select count(oxid) from
@@ -1065,11 +1073,11 @@ MYSQL;
      * @param $sSlot
      *
      * @return string
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function deleteLostPictures($sSlot)
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
         SELECT oxid, D3FILENAME as File
@@ -1133,11 +1141,11 @@ MYSQL;
      * @param $sSlot
      *
      * @return object
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function deleteStartStopFlag($sSlot)
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
         DELETE FROM `d3lostpictures`
@@ -1151,11 +1159,11 @@ MYSQL;
      * @param $sSlot
      *
      * @return false|string
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException
      */
     public function hasFinishedImport($sSlot)
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
         SELECT count(oxid) as countflag FROM `d3lostpictures`
@@ -1175,11 +1183,11 @@ MYSQL;
 
     /**
      * @return array
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function checkAllSlotsIfFinished()
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
        SELECT d3folder, count(oxid) as countflag FROM `d3lostpictures`
@@ -1260,7 +1268,7 @@ MYSQL;
 
     /**
      * @return bool
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException
      */
     public function tableExist()
     {
@@ -1288,11 +1296,12 @@ class setupDeletePicturesTable extends oxSuperCfg
     public $_sTable = 'd3lostpictures';
 
     /**
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException
+     * @throws DatabaseErrorException
      */
     public static function createTable()
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
 
         $sQuery =
             <<<MYSQL
@@ -1321,11 +1330,11 @@ MYSQL;
     }
 
     /**
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public static function dropTable()
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
 Drop table `d3lostpictures`;
@@ -1337,11 +1346,11 @@ MYSQL;
     /**
      * @param $sSlot
      *
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public static function truncateTable($sSlot)
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery =
             <<<MYSQL
 TRUNCATE `d3lostpictures`;
@@ -1361,11 +1370,11 @@ MYSQL;
 
     /**
      * @return bool
-     * @throws oxConnectionException
+     * @throws DatabaseConnectionException
      */
     public static function tableExist()
     {
-        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
         $sQuery = <<<MYSQL
 SHOW TABLES LIKE 'd3lostpictures';
 MYSQL;
@@ -1376,8 +1385,12 @@ MYSQL;
 /** @var deletePictures $oBilderLesen */
 $oDeletePictures = oxNew('deletePictures');
 
-$sAction = oxRegistry::getConfig()->getRequestParameter('action');
-$sParameter = oxRegistry::getConfig()->getRequestParameter('parameter');
+$oRegistry = oxNew(Registry::getConfig());
+
+
+
+$sAction = $oRegistry->getRequestParameter('action');
+$sParameter = $oRegistry->getRequestParameter('parameter');
 if(trim($sAction) != '')
 {
     $oDeletePictures->{$sAction}($sParameter);
