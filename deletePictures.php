@@ -1,8 +1,8 @@
 <?php
 
+use OxidEsales\Eshop\Core\Base;
 use OxidEsales\Eshop\Core\DatabaseProvider;
-use OxidEsales\Eshop\Core\Exception\DatabaseConnectionException;
-use OxidEsales\Eshop\Core\Exception\DatabaseErrorException;
+use OxidEsales\Eshop\Core\Model\BaseModel;
 use OxidEsales\Eshop\Core\Registry;
 
 include(__DIR__ . '/bootstrap.php');
@@ -10,7 +10,7 @@ include(__DIR__ . '/bootstrap.php');
 /**
  * Class deletePictures
  */
-class deletePictures extends oxSuperCfg
+class deletePictures extends Base
 {
     /*DO NOT CHANGE START */
     public $sFolder = 'out/pictures/master/product/';
@@ -45,10 +45,6 @@ class deletePictures extends oxSuperCfg
     /*CHANGE BY USER END */
 
 
-    /**
-     * @throws oxConnectionException
-     * @throws DatabaseConnectionException|DatabaseErrorException
-     */
     public function render()
     {
         if($this->checkForCookieAgreement())
@@ -124,18 +120,20 @@ class deletePictures extends oxSuperCfg
                     <div class="row">
                         <div class="col-xs-12 col-md-6">                    
                             <form method="post"> 
-                                <input type="hidden" name="action" value="getFolderContents">
+                                <input type="hidden" name="action" value="'.$this->getFolderContents().'">
                                 <input class="btn btn-sm btn-primary" type="submit" value="Bilder suchen / Verzeichnisse einlesen" title="Bilder suchen">
                             </form>
                         </div>
                     
                         <div class="col-xs-12 col-md-6">
-                            Was geschieht hier:
-                            <p>In den Unterverzeichnissen in '.$this->sFolder.' werden die enthalten Dateien ausgelesen. Bei diesem Vorgang wird sofort gepr&uuml;ft welche Dateien in der Tabelle oxarticles nicht mehr enthalten sind.
+                            Was geschieht hier:<br><br>
+                            <p>In den Unterverzeichnissen in <b>'.$this->sFolder.'</b> werden die enthalten Dateien ausgelesen. 
+                            Bei diesem Vorgang wird sofort gepr&uuml;ft welche Dateien <b>in der Tabelle oxarticles nicht</b> mehr enthalten sind.
                             Ist ein Bild nicht mehr an einem Artikel hinterlegt, dann erfolgt die Abspeicherung in der Tabelle d3lostpictures.
-                            <br>
-                            Die Pr&uuml;fung erfolgt pro Bildslot und nicht global auf alle Verzeichnisse und Bildfelder in der Tabelle oxarticles. Dies bedeuted: 
-                            z.B. die Bilder im Ordner "'.$this->sFolder.'1" werden nur gegen das Feld oxpic1 gepr&uuml;ft und nicht gegen oxpic2 oder oxthumb.
+                            <br><br>
+                            Die Pr&uuml;fung erfolgt pro Bildslot und <b>nicht global</b> auf alle Verzeichnisse und Bildfelder in der Tabelle oxarticles.<br>
+                            Dies bedeuted:
+                            z.B. die Bilder im Ordner <b>"'.$this->sFolder.'1"</b> werden nur gegen das Feld <b>oxpic1</b> gepr&uuml;ft und nicht gegen oxpic2 oder oxthumb.
                             </p>                       
                         </div>
                     </div>
@@ -282,6 +280,8 @@ class deletePictures extends oxSuperCfg
      */
     public function getAgreementForm()
     {
+        $oRegistry = oxNew(Registry::class);
+
         $sPath = $_SERVER["ORIG_PATH_INFO"]?$_SERVER["ORIG_PATH_INFO"]:$_SERVER['REQUEST_URI'];
         $sPath = basename($sPath);
         $sOutput = $this->getHtmlHeader();
@@ -304,7 +304,7 @@ class deletePictures extends oxSuperCfg
                 </div>
             
                 <div class="form-group col-xs-12">
-                    <form method="get" action="'.oxRegistry::getConfig()->getSslShopUrl().$sPath.'"> 
+                    <form method="get" action="'.$oRegistry::getConfig()->getSslShopUrl().$sPath.'"> 
                         <input type="hidden" name="action" value="setAgreement">
                         <div class="checkbox">
                             <label for="agreement"><input name="agreement" id="agreement" type="checkbox" value="true">Ich habe die oben genannten Punkte gelesen und f&uuml;hre das Script auf eigene Verantwortung aus.</label>
@@ -342,31 +342,35 @@ class deletePictures extends oxSuperCfg
 
     public function setAgreement()
     {
+        $oRegistry = oxNew(Registry::class);
+
         $sPath = $_SERVER["ORIG_PATH_INFO"]?$_SERVER["ORIG_PATH_INFO"]:$_SERVER['REQUEST_URI'];
         $sPath = basename($sPath);
 
         //action=setAgreement - entfernen
-        $aUrl = parse_url(oxRegistry::getConfig()->getSslShopUrl().$sPath);
+        $aUrl = parse_url($oRegistry::getConfig()->getSslShopUrl().$sPath);
         $sPath = ltrim($aUrl['path'],'/');
 
-        if(oxRegistry::getConfig()->getRequestParameter('agreement') == true)
+        if($oRegistry::getConfig()->getRequestParameter('agreement') == true)
         {
             setcookie($this->sCookieName, true, strtotime( '+7 days' ));
         }
-        oxRegistry::getUtils()->redirect(oxRegistry::getConfig()->getSslShopUrl().$sPath,false);
+        $oRegistry::getUtils()->redirect($oRegistry::getConfig()->getSslShopUrl().$sPath,false);
     }
 
     public function removeAgreement()
     {
+        $oRegistry = oxNew(Registry::class);
+
         $sPath = $_SERVER["ORIG_PATH_INFO"]?$_SERVER["ORIG_PATH_INFO"]:$_SERVER['REQUEST_URI'];
         $sPath = basename($sPath);
 
         //action=removeAgreement - entfernen
-        $aUrl = parse_url(oxRegistry::getConfig()->getSslShopUrl().$sPath);
+        $aUrl = parse_url($oRegistry::getConfig()->getSslShopUrl().$sPath);
         $sPath = ltrim($aUrl['path'],'/');
 
         setcookie($this->sCookieName, false, time()-1000);
-        oxRegistry::getUtils()->redirect(oxRegistry::getConfig()->getSslShopUrl().$sPath,false);
+        $oRegistry::getUtils()->redirect($oRegistry::getConfig()->getSslShopUrl().$sPath,false);
     }
 
     /**
@@ -436,17 +440,16 @@ class deletePictures extends oxSuperCfg
 
     /**
      * todo: Pr&uuml;fung af unvollst&auml;ndig eingelesenen Ordner
-     *
-     * @throws oxConnectionException
-     * @throws oxSystemComponentException
      */
     public function getFolderContents()
     {
+
         //Tabelle leeren
         //$this->truncateTable();
         $aSlotsFromLostPictures = $this->getLostPicturesSlotsFromTable();
 
         $sFolder = $this->getPathToShop().$this->sFolder;
+
         $aFolder = $this->getFolders();
 
         natsort($aFolder);
@@ -470,7 +473,9 @@ class deletePictures extends oxSuperCfg
             if ($handle = opendir($sFolder.$sTmpFolder))
             {
                 $aFilesOxPics = $this->getAllPicturesFromTable($sTmpFolder);
+
                 $this->setStartStopFlag($sTmpFolder,'START');
+
                 while (false !== ($entry = readdir($handle)))
                 {
                     if ($entry == "." || $entry == ".." || $entry == "dir.txt" || trim($entry) == '')
@@ -497,12 +502,12 @@ class deletePictures extends oxSuperCfg
                     $aPictureData['D3DATE'] = date ("Y-m-d H:i:s");
                     $aPictureData['OXID'] = md5($entry.$sTmpFolder.date ("Y-m-d H:i:s"));
 
-                    /** @var oxbase $oItem */
-                    $oItem = oxNew("oxbase");
+                    $oItem = oxNew(BaseModel::class);
                     $oItem->init("d3lostpictures");
                     $oItem->assign($aPictureData);
 
                     $oItem->save();
+
                 }
                 //die();
                 $this->setStartStopFlag($sTmpFolder,'STOP');
@@ -521,11 +526,12 @@ class deletePictures extends oxSuperCfg
 
     /**
      * @return array
-     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getLostPicturesSlotsFromTable()
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
 select d3folder from d3lostpictures
@@ -571,17 +577,18 @@ MYSQL;
      * @param $sSlot
      *
      * @return array
-     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getAllPicturesFromTable($sSlot)
     {
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
         //echo $sSlot;
         $sPictureDbField = 'oxpic'.$sSlot;
         if($sSlot == 'thumb' || $sSlot == 'icon'){
             $sPictureDbField = 'ox'.$sSlot;
         }
 
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
 select {$sPictureDbField} from oxarticles where {$sPictureDbField} != ''
@@ -602,7 +609,9 @@ MYSQL;
      */
     public function getPathToShop()
     {
-        return oxRegistry::getConfig()->getConfigParam('sShopDir');
+        $oRegistry = oxNew(Registry::class);
+
+        return $oRegistry::getConfig()->getConfigParam('sShopDir');
     }
 
 
@@ -628,8 +637,6 @@ MYSQL;
 
     /**
      * @param $sSlot
-     *
-     * @throws oxConnectionException
      */
     public function getLostPicturesSlot($sSlot)
     {
@@ -641,14 +648,15 @@ MYSQL;
      * @param $sSlot
      *
      * @return string
-     * @throws oxConnectionException
      */
     public function getLostPictureAsTableContent($aPictures)
     {
+        $oRegistry = oxNew(Registry::class);
+
         $this->sOutPutTitle = 'Anzeige Bilder';
 
         //dumpvar($aPictures);
-        $sUrlToFolder = oxRegistry::getConfig()->getShopUrl().$this->sFolder;
+        $sUrlToFolder = $oRegistry::getConfig()->getShopUrl().$this->sFolder;
 
         $sContent = '<table class="table table-striped table-hover table-sm">
         <tr>
@@ -666,7 +674,7 @@ MYSQL;
 
             $sContent .= '
             <tr>
-            <td><a href="'.$sPathWithPicture.'" target="_blank"><img src="'.$sPathWithPicture.'" style="max-height: 100px"></a></td>
+            <td><a href="'.$sPathWithPicture.'" target="_blank"><img src="'.$sPathWithPicture.'" style="max-height: 100px" alt="'.$sPathWithPicture.'"></a></td>
             <td>'.$this->sFolder.$aPicture['D3FOLDER'].'/'.$sFileName.'</td>
             <td>'.$aPicture['D3WIDTH'].'px * '.$aPicture['D3HEIGHT'].'px</td>
             <td>'.$this->formatBytes($aPicture['D3FILESIZE']).'</td>
@@ -681,10 +689,11 @@ MYSQL;
 
     /**
      * @param $sSlot
-     * @throws oxConnectionException
      */
     public function getLostPicturesInCsvFile($sSlot)
     {
+        $oRegistry = oxNew(Registry::class);
+
         //$sUrlToFolder = oxRegistry::getConfig()->getShopUrl().$this->sFolder;
         $sSeparator = '"';
         $sColumn = ";".PHP_EOL;
@@ -699,7 +708,7 @@ MYSQL;
             $sFileContent .= $sSeparator.$this->sFolder.$aPicture['D3FOLDER'].'/'.$sFileName.$sSeparator.$sColumn;
         }
 
-        $oUtils = oxRegistry::getUtils();
+        $oUtils = $oRegistry::getUtils();
         $sFilename = 'Folder_'.$sSlot.'.csv';
         ob_start();
         //$sPDF = ob_get_contents();
@@ -710,7 +719,7 @@ MYSQL;
         $oUtils->setHeader("Expires: 0");
         $oUtils->setHeader("Content-type: application/csv");
         $oUtils->setHeader("Content-Disposition: attachment; filename=" . $sFilename);
-        oxRegistry::getUtils()->showMessageAndExit($sCsv);
+        $oRegistry::getUtils()->showMessageAndExit($sCsv);
 
     }
 
@@ -718,12 +727,12 @@ MYSQL;
      * @param $sSlot
      *
      * @return mixed
-     * @throws oxConnectionException
-     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getLostPictures($sSlot)
     {
-        $oDb = DatabaseProvider::getDb(oxDb::FETCH_MODE_ASSOC);
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
 
         /*
         $sPictureDbField = 'oxpic'.$sSlot;
@@ -758,11 +767,12 @@ MYSQL;
      * @param $sSlot
      *
      * @return false|string
-     * @throws DatabaseConnectionException
      */
     public function getCountLostPictures($sSlot)
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
 select count(oxid) as files from d3lostpictures
@@ -775,8 +785,6 @@ MYSQL;
 
     /**
      * @return array
-     * @throws oxConnectionException
-     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function getLostPictureGroupByFolder()
     {
@@ -785,13 +793,15 @@ MYSQL;
             return array();
         }
 
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
 select d3folder, count(oxid) as files, sum(d3filesize) as size from d3lostpictures
 where 1
 group by d3folder
-order by LENGTH(cast(d3folder as CHAR)),d3folder
+order by LENGTH(cast(d3folder as CHAR)),d3folder  
 MYSQL;
         $aRes = $oDb->getAll($sQuery);
 
@@ -808,7 +818,6 @@ MYSQL;
      * @param $sSlot
      *
      * @return false|string
-     * @throws DatabaseConnectionException
      */
     public function getCountLostPictureGroupByFolder($sSlot)
     {
@@ -817,7 +826,9 @@ MYSQL;
             $sPictureDbField = 'ox'.$sSlot;
         }
 
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
 select count(oxid) from
@@ -836,7 +847,6 @@ MYSQL;
 
     /**
      * @return string
-     * @throws oxConnectionException
      */
     public function getLostPictureGroupByFolderAsHtml()
     {
@@ -920,7 +930,6 @@ MYSQL;
 
     /**
      * @return string
-     * @throws oxConnectionException
      */
     public function getLostPicturesDeleteButtonsAsHtml()
     {
@@ -965,7 +974,6 @@ MYSQL;
     }
     /**
      * @return string
-     * @throws oxConnectionException
      */
     public function getLostPicturesAsCsvFile()
     {
@@ -1010,7 +1018,6 @@ MYSQL;
 
     /**
      * @return string
-     * @throws oxConnectionException
      */
     public function getLostPicturesDisplayButtonsAsHtml()
     {
@@ -1073,11 +1080,12 @@ MYSQL;
      * @param $sSlot
      *
      * @return string
-     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function deleteLostPictures($sSlot)
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
         SELECT oxid, D3FILENAME as File
@@ -1111,8 +1119,6 @@ MYSQL;
     /**
      * @param $sSlot
      * @param $sType
-     *
-     * @throws oxSystemComponentException
      */
     public function setStartStopFlag($sSlot,$sType)
     {
@@ -1129,8 +1135,7 @@ MYSQL;
         $aPictureData['D3DATE'] = date ("Y-m-d H:i:s");
         $aPictureData['OXID'] = md5($sType.$sSlot.date ("Y-m-d H:i:s"));
 
-        /** @var oxbase $oItem */
-        $oItem = oxNew("oxbase");
+        $oItem = oxNew(BaseModel::class);
         $oItem->init("d3lostpictures");
         $oItem->assign($aPictureData);
 
@@ -1141,11 +1146,14 @@ MYSQL;
      * @param $sSlot
      *
      * @return object
-     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function deleteStartStopFlag($sSlot)
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
         DELETE FROM `d3lostpictures`
@@ -1159,11 +1167,12 @@ MYSQL;
      * @param $sSlot
      *
      * @return false|string
-     * @throws DatabaseConnectionException
      */
     public function hasFinishedImport($sSlot)
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
         SELECT count(oxid) as countflag FROM `d3lostpictures`
@@ -1183,11 +1192,12 @@ MYSQL;
 
     /**
      * @return array
-     * @throws DatabaseConnectionException|DatabaseErrorException
      */
     public function checkAllSlotsIfFinished()
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
        SELECT d3folder, count(oxid) as countflag FROM `d3lostpictures`
@@ -1233,17 +1243,11 @@ MYSQL;
         return true;
     }
 
-    /**
-     * @throws oxConnectionException
-     */
     public function createTable()
     {
         return setupDeletePicturesTable::createTable();
     }
 
-    /**
-     * @throws oxConnectionException
-     */
     public function dropTable()
     {
         if($this->tableExist() == true) {
@@ -1257,7 +1261,6 @@ MYSQL;
      * @param $sSlot
      *
      * @return bool|void
-     * @throws oxConnectionException
      */
     public function truncateTable($sSlot)
     {
@@ -1268,7 +1271,6 @@ MYSQL;
 
     /**
      * @return bool
-     * @throws DatabaseConnectionException
      */
     public function tableExist()
     {
@@ -1291,17 +1293,18 @@ MYSQL;
 /**
  * Class setupDeletePicturesTable
  */
-class setupDeletePicturesTable extends oxSuperCfg
+class setupDeletePicturesTable extends Base
 {
     public $_sTable = 'd3lostpictures';
 
     /**
-     * @throws DatabaseConnectionException
-     * @throws DatabaseErrorException
+     * @throws oxConnectionException
      */
     public static function createTable()
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
 
         $sQuery =
             <<<MYSQL
@@ -1330,11 +1333,13 @@ MYSQL;
     }
 
     /**
-     * @throws DatabaseConnectionException|DatabaseErrorException
+     * @throws oxConnectionException
      */
     public static function dropTable()
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
 Drop table `d3lostpictures`;
@@ -1346,11 +1351,13 @@ MYSQL;
     /**
      * @param $sSlot
      *
-     * @throws DatabaseConnectionException|DatabaseErrorException
+     * @throws oxConnectionException
      */
     public static function truncateTable($sSlot)
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery =
             <<<MYSQL
 TRUNCATE `d3lostpictures`;
@@ -1370,11 +1377,13 @@ MYSQL;
 
     /**
      * @return bool
-     * @throws DatabaseConnectionException
+     * @throws oxConnectionException
      */
     public static function tableExist()
     {
-        $oDb = DatabaseProvider::getDb('FETCH_MODE_ASSOC');
+        $oDatabaseProvider = oxNew(DatabaseProvider::class);
+
+        $oDb = $oDatabaseProvider::getDb($oDatabaseProvider::FETCH_MODE_ASSOC);
         $sQuery = <<<MYSQL
 SHOW TABLES LIKE 'd3lostpictures';
 MYSQL;
@@ -1385,12 +1394,10 @@ MYSQL;
 /** @var deletePictures $oBilderLesen */
 $oDeletePictures = oxNew('deletePictures');
 
-$oRegistry = oxNew(Registry::getConfig());
+$oRegistry = oxNew(Registry::class);
 
-
-
-$sAction = $oRegistry->getRequestParameter('action');
-$sParameter = $oRegistry->getRequestParameter('parameter');
+$sAction = $oRegistry::getConfig()->getRequestParameter('action');
+$sParameter = $oRegistry::getConfig()->getRequestParameter('parameter');
 if(trim($sAction) != '')
 {
     $oDeletePictures->{$sAction}($sParameter);
